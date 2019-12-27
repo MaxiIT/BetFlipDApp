@@ -3,7 +3,7 @@ var contractInstance;
 
 $(document).ready(function() {
     window.ethereum.enable().then(function(accounts){
-        contractInstance = new web3.eth.Contract(abi, "//insert Contract Address of Deployed Contract here", {from: accounts[0]});
+        contractInstance = new web3.eth.Contract(abi, "0xb04D96b1BaC12449164EB08A7e6f3E11C2b9F073", {from: accounts[0]});
         console.log(contractInstance);
     });
     $("#flip_button").click(flip);  //Improve: Success alert information 
@@ -12,11 +12,9 @@ $(document).ready(function() {
 
 function flip(){
     var bet = $("#bet_input").val();
-
     var config = {
         value: web3.utils.toWei(bet,"ether")
     }
-
     contractInstance.methods.flip().send(config)
     .on("transactionHash", function(hash){
         console.log(hash);
@@ -32,8 +30,6 @@ function flip(){
 
 function fetchAndDisplay(){
     contractInstance.methods.getBalance().call().then(function(res){
-        console.log(res);
-        $("owner_output").text(res[0]);     // What is wrong here?
-        $("balance_output").text(res[1]);   // What is wrong here?
+        $("#jakpot_output").text(web3.utils.fromWei(res[1], "ether") + " Ether");
     })
 }
