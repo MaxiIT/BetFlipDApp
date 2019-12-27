@@ -3,10 +3,10 @@ var contractInstance;
 
 $(document).ready(function() {
     window.ethereum.enable().then(function(accounts){
-        contractInstance = new web3.eth.Contract(abi, "0xb04D96b1BaC12449164EB08A7e6f3E11C2b9F073", {from: accounts[0]});
+        contractInstance = new web3.eth.Contract(abi, "0xA8c21973eb254b528e144b1939A7181eC8F4B2C4", {from: accounts[0]});
         console.log(contractInstance);
     });
-    $("#flip_button").click(flip);  //Improve: Success alert information 
+    $("#flip_button").click(flip);
     $("#get_data_button").click(fetchAndDisplay);
 });
 
@@ -24,12 +24,17 @@ function flip(){
     })
     .on("receipt", function(receipt){
         console.log(receipt);
-        alert("Done!")
+        if(receipt.events.bet.returnValues[2] === false){
+            alert("You lost " + bet + " Ether!");
+        }
+        else if(receipt.events.bet.returnValues[2] === true){
+            alert("You won " + bet + " Ether!");
+        }
     })
 }
 
 function fetchAndDisplay(){
     contractInstance.methods.getBalance().call().then(function(res){
-        $("#jakpot_output").text(web3.utils.fromWei(res[1], "ether") + " Ether");
+        $("#jackpot_output").text(web3.utils.fromWei(res[1], "ether") + " Ether");
     })
 }

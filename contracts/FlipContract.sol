@@ -15,7 +15,7 @@ contract FlipContract is Ownable {
         _;
     }
     // Function to simulate coin flip 50/50 randomnes
-    function flip() public payable costs(0.01 ether) {
+    function flip() public payable costs(0.01 ether) returns(bool){
         require(address(this).balance >= msg.value, "The contract hasn't enought funds");
         bool success;
         if(now % 2 == 0){
@@ -29,6 +29,7 @@ contract FlipContract is Ownable {
         }
         assert(ContractBalance == address(this).balance);
         emit bet(msg.sender, msg.value, success);
+        return success;
     }
     // Function to Withdraw Funds
     function withdrawAll() public onlyContractOwner returns(uint){
