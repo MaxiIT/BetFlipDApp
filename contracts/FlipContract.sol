@@ -27,17 +27,15 @@ contract FlipContract is Ownable {
             msg.sender.transfer(msg.value * 2);
             success = true;
         }
-        assert(ContractBalance == address(this).balance);
+        //assert(ContractBalance == address(this).balance);
         emit bet(msg.sender, msg.value, success);
         return success;
     }
     // Function to Withdraw Funds
     function withdrawAll() public onlyContractOwner returns(uint){
-        uint toTransfer = ContractBalance;
-        ContractBalance = 0;
-        msg.sender.transfer(toTransfer);
-        assert(ContractBalance == address(this).balance);
-        return toTransfer;
+        msg.sender.transfer(address(this).balance);
+        assert(address(this).balance == 0);
+        return address(this).balance;
     }
     // Function to get the Balance of the Contract
     function getBalance() public view returns (address, uint, uint) {
@@ -46,9 +44,9 @@ contract FlipContract is Ownable {
     // Fund the Contract
     function fundContract() public payable onlyContractOwner returns(uint){
         require(msg.value != 0);
-        ContractBalance += msg.value;
+        //ContractBalance += msg.value;
         emit funded(msg.sender, msg.value);
-        assert(ContractBalance == address(this).balance);
+        //assert(ContractBalance == address(this).balance);
         return msg.value;
     }
 
