@@ -44,7 +44,7 @@ For unit testing truffle-assertions can be very helpful
 
 2. MeteMask Brower extension
 
-#### Step by Step
+#### Localhost Ganche Setup
 1. Implement Basic DApp Template "index.html", "main.js" & "web2.min.js"
 
 2. Run a local python web server with console
@@ -63,3 +63,29 @@ For unit testing truffle-assertions can be very helpful
 7. Define JavaScript instance in "main.js" and create "abi.js" file
 
 8. Import "abi.js" to index.html line 12
+
+#### Testnet Ropsten Setup
+1. Uncomment lines 21-25 & 63 - 70 (Ropsten Network Configuration ) of "truffle-config.js" file
+
+2. Register on infura.io
+    * create new project
+    * copy "Project Secret" => Past to infuraKey in line 22 in truffle-config.js file
+    * copy "Endpoint Ropsten" => Past to provider link in line 64
+
+3. Receal and Copy Seed Words of MetaMask Wallet
+    * create new file ".secret" => past in the Seed Words
+
+4. Install node package
+    ```
+    npm install truffle-hdwallet-provider
+    ```
+5. Get some Test-Ether for the Ropsten Network
+    * go to https://faucet.metamask.io/ and request 1 Ether from faucet
+
+6. Deploy contract on Ropsten Network
+    ```
+    truffle migrate --network ropsten 
+    ```
+#### Get Provable API
+
+1. Download and save provableAPI.sol file form https://github.com/provable-things/ethereum-api/blob/master/provableAPI_0.5.sol
