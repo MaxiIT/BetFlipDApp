@@ -5,19 +5,26 @@ pragma solidity 0.5.12;
 
 contract FlipContract is Ownable, usingProvable {
 
-    uint256 constant NUM_RANDOM_BYTES_REQUESTED = 1;    //Why unit256? Isn't uint8 enought?
-    uint256 public latestNumber;                        //Why unit256? Isn't uint8 enought?
-    uint bet;
-    address payable player;
+    uint256 constant NUM_RANDOM_BYTES_REQUESTED = 1;    //Value of 1-32: But why unit256? Isn't uint8 enought? In ProvableAPI.sol in line 1077 there is even a conversion to uint8 >> byte(uint8(_nbytes));
+    bytes32 queryId;                                    //Is it realy necessary to have it as state variable?
 
-    event betTaken(address user, uint bet, bool);
+    struct Bet {                                        //Struct Variable for betting process
+        address payable player;                         //msg.sender is the player
+        uint value;                                     //betting value (double or loose)
+        bool result;                                    //win or loose result
+    }
+//* Events */
+    event betTaken(address player, uint value, bool result);
     event funded(address contractOwner, uint funding);
     event LogNewProvableQuery(string description);
     event generatedRandomNumber(uint256 randomNumber);
 
+    mapping (bytes32 => Bet) public betting;            //Query Id coupling to Bet
+    mapping (address => bool) public waiting;           //Msg.sender waiting system (Player have to wait until previous bet is taken and finished)
+
     constructor() public {
         provable_setProof(proofType_Ledger);
-        flip();                                       //Update to new random number
+        flip();
     }
 
     modifier costs(uint cost){
@@ -29,80 +36,46 @@ contract FlipContract is Ownable, usingProvable {
         require(msg.sender == provable_cbAddress());
 
         if (provable_randomDS_proofVerify__returnCode(_queryId, _result, _proof) != 0) {
-            /**
+            /*
              * @notice  The proof verification has failed! Handle this case
-             *          however you see fit.
-             */
+             *          however you see fit. --> Not sure what to do here.
+            */
         }
         else {
-            /**
-             *
-             * @notice  The proof verifiction has passed!
-             *
-             *          Let's convert the random bytes received from the query
-             *          to a `uint256`.
-             *
-             *          To do so, We define the variable `ceiling`, where
-             *          `ceiling - 1` is the highest `uint256` we want to get.
-             *          The variable `ceiling` should never be greater than:
-             *          `(MAX_INT_FROM_BYTE ^ NUM_RANDOM_BYTES_REQUESTED) - 1`.
-             *
-             *          By hashing the random bytes and casting them to a
-             *          `uint256` we can then modulo that number by our ceiling
-             *          in order to get a random number within the desired
-             *          range of [0, ceiling - 1].
-             *
-             */
-            // ceiling = (MAX_INT_FROM_BYTE ** NUM_RANDOM_BYTES_REQUESTED) - 1;
-            uint256 randomNumber = uint256(keccak256(abi.encodePacked(_result))) % 100; //Random number between 0 - 100
-            latestNumber = randomNumber;
-            bool success;
 
-            if(randomNumber <= 50){
-                success = false;
-            }
-            else if(randomNumber >= 50){
-                success = true;
-                player.transfer(bet * 2);
-            }
-            emit betTaken(player, bet, success);
-            //return success;
-            emit generatedRandomNumber(randomNumber);
+        uint256 randomNumber = uint256(keccak256(abi.encodePacked(_result))) % 2;
+
+        if(randomNumber == 0){
+            betting[_queryId].result == false;
         }
+        else if(randomNumber == 1){
+            betting[_queryId].result == true;
+            betting[_queryId].player.transfer((betting[_queryId].value)*2);
+        }
+
+        waiting[betting[_queryId].player] = false;
+
+        emit betTaken(betting[_queryId].player, betting[_queryId].value, betting[_queryId].result);
+        emit generatedRandomNumber(randomNumber);
+       }
     }
     // Function to simulate coin flip 50/50 randomnes
     function flip() public payable {
         //require(msg.value <= address(this).balance / 2, "Jackpot is the max bet you can make");
-
-        bet = msg.value;
-        player = msg.sender;
+        require(waiting[msg.sender] == false);
+        waiting[msg.sender] = true;
 
         uint256 QUERY_EXECUTION_DELAY = 0;      //config: execution delay (0 for no delay)
         uint256 GAS_FOR_CALLBACK = 200000;      //config: gas fee for calling __callback function (200000 is standard)
-        provable_newRandomDSQuery(QUERY_EXECUTION_DELAY, NUM_RANDOM_BYTES_REQUESTED, GAS_FOR_CALLBACK);     //function to query a random number, it will call the __callback function
+        queryId = provable_newRandomDSQuery(QUERY_EXECUTION_DELAY, NUM_RANDOM_BYTES_REQUESTED, GAS_FOR_CALLBACK);     //function to query a random number, it will call the __callback function
+
+        betting[queryId] = Bet({player: msg.sender, value: msg.value, result: false});      //Initialize Bet with values of player
+
         emit LogNewProvableQuery("Provable query was sent, standing by for answer...");
     }
-
-/*    // Function to simulate coin flip 50/50 randomnes
-    function flip() public payable returns(bool){
-        //require(address(this).balance >= msg.value, "The contract hasn't enought funds");
-        bool success;
-        if(now % 2 == 0){
-            ContractBalance += msg.value;
-            success = false;
-        }
-        else if(now % 2 == 1){
-            ContractBalance -= msg.value;
-            msg.sender.transfer(msg.value * 2);
-            success = true;
-        }
-        //assert(ContractBalance == address(this).balance);
-        emit betTaken(msg.sender, msg.value, success);
-        return success;
-    }
-*/
     // Function to Withdraw Funds
     function withdrawAll() public onlyContractOwner returns(uint){
+        //Should require that no bet is prozess! 
         msg.sender.transfer(address(this).balance);
         assert(address(this).balance == 0);
         return address(this).balance;

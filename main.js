@@ -3,7 +3,7 @@ var contractInstance;
 
 $(document).ready(function() {
     window.ethereum.enable().then(function(accounts){
-        contractInstance = new web3.eth.Contract(abi, "0xB46543971bd3DB0ad13dEbD245c0c8515D562488", {from: accounts[0]});
+        contractInstance = new web3.eth.Contract(abi, "0x2Deea67109e771100B5dc0B664F7778F8977408e", {from: accounts[0]});
         console.log(contractInstance);
     });
     $("#flip_button").click(flip);
@@ -37,6 +37,7 @@ function flip(){
 
 function fetchAndDisplay(){
     contractInstance.methods.getBalance().call().then(function(res){
+        console.log(res);
         $("#jackpot_output").text(web3.utils.fromWei(res[1], "ether") + " Ether");
     })
 }
