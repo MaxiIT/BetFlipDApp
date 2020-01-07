@@ -24,11 +24,13 @@ contract FlipContract is Ownable, usingProvable {
 
     constructor() public {
         provable_setProof(proofType_Ledger);
-        flip();
+        //flip();
     }
 
     modifier costs(uint cost){
-        require(msg.value >= cost, "The minimum bet is 0.01 Ether");
+        uint jackpot = address(this).balance / 2;
+        require(msg.value <= jackpot, "Jackpot is the max bet you can make");   //This statement is not working yet
+        require(msg.value >= cost, "The minimum bet you can make is 0.01 Ether");
         _;
     }
     // Oracle Callback Function of the flip() function
@@ -60,8 +62,7 @@ contract FlipContract is Ownable, usingProvable {
        }
     }
     // Function to simulate coin flip 50/50 randomnes
-    function flip() public payable {
-        //require(msg.value <= address(this).balance / 2, "Jackpot is the max bet you can make");
+    function flip() public payable costs(0.01 ether){
         require(waiting[msg.sender] == false);
         waiting[msg.sender] = true;
 
@@ -75,14 +76,15 @@ contract FlipContract is Ownable, usingProvable {
     }
     // Function to Withdraw Funds
     function withdrawAll() public onlyContractOwner returns(uint){
-        //Should require that no bet is prozess! 
+        //Should require that no bet is prozess! Should wait!
         msg.sender.transfer(address(this).balance);
         assert(address(this).balance == 0);
         return address(this).balance;
     }
     // Function to get the Balance of the Contract
-    function getBalance() public view returns (address, uint) {
-        return (address(this), address(this).balance);
+    function getContractBalance() public view returns (uint) {
+        uint contractBalance;
+        return contractBalance = address(this).balance;
     }
     // Fund the Contract
     function fundContract() public payable onlyContractOwner returns(uint){
