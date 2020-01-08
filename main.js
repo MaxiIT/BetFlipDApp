@@ -3,11 +3,15 @@ var contractInstance;
 
 $(document).ready(function() {
     window.ethereum.enable().then(function(accounts){
-        contractInstance = new web3.eth.Contract(abi, "0x6588181fAF1d8F5564507CeD4aE1B5696139d02c", {from: accounts[0]});
+        contractInstance = new web3.eth.Contract(abi, "0xb88934280b3E12be60452a56d758D02c0a505b03", {from: accounts[0]});
         console.log(contractInstance);
     });
+
+    web3.eth.getBalance("0xb88934280b3E12be60452a56d758D02c0a505b03").then(function(result){
+        $("#jackpot_output").text(web3.utils.fromWei(result, "ether") + " Ether");
+    });
+
     $("#flip_button").click(flip);
-    $("#get_data_button").click(fetchAndDisplay);
     $("#fund_contract_button").click(fundContract);
     $("#withdraw_button").click(withdrawAll);
 });
@@ -26,20 +30,29 @@ function flip(){
     })
     .on("receipt", function(receipt){
         console.log(receipt);
-        if(receipt.events.bet.returnValues[2] === false){
+        /*
+        if(receipt.events.betTaken.returnValues[2] === false){
             alert("You lost " + bet + " Ether!");
         }
-        else if(receipt.events.bet.returnValues[2] === true){
+        else if(receipt.events.betTaken.returnValues[2] === true){
             alert("You won " + bet + " Ether!");
         }
+        */
     })
+
+    contractInstance.events.betTaken(function(error, event){ 
+        console.log(event); 
+    })
+    .on('data', function(event){
+        console.log(event); // same results as the optional callback above
+    })
+    .on('changed', function(event){
+        // remove event from local database
+    })
+    .on('error', console.error);
+
 }
 
-function fetchAndDisplay(){
-    contractInstance.methods.getBalance().call().then(function(res){
-        $("#jackpot_output").text(web3.utils.fromWei(res[1], "ether") + " Ether");
-    })
-}
 
 function fundContract(){
     var fund = $("#fund_input").val();
