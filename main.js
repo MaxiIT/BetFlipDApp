@@ -3,17 +3,25 @@ var contractInstance;
 
 $(document).ready(function() {
     window.ethereum.enable().then(function(accounts){
-        contractInstance = new web3.eth.Contract(abi, "0xb88934280b3E12be60452a56d758D02c0a505b03", {from: accounts[0]});
+        contractInstance = new web3.eth.Contract(abi, "0xff93D08C89fB0f894C3c24a3bC135fd1D975Eb0b", {from: accounts[0]});
         console.log(contractInstance);
+        
     });
-
-    web3.eth.getBalance("0xb88934280b3E12be60452a56d758D02c0a505b03").then(function(result){
+  
+    
+    web3.eth.getBalance("0xff93D08C89fB0f894C3c24a3bC135fd1D975Eb0b").then(function(result){
         $("#jackpot_output").text(web3.utils.fromWei(result, "ether") + " Ether");
     });
-
+    
     $("#flip_button").click(flip);
     $("#fund_contract_button").click(fundContract);
     $("#withdraw_button").click(withdrawAll);
+    
+    
+    //Event listener 3
+    //contractInstance.events.generatedRandomNumber({})
+    //    .on('data', event => console.log(event));
+    
 });
 
 function flip(){
@@ -39,18 +47,25 @@ function flip(){
         }
         */
     })
-
-    contractInstance.events.betTaken(function(error, event){ 
-        console.log(event); 
-    })
-    .on('data', function(event){
-        console.log(event); // same results as the optional callback above
-    })
-    .on('changed', function(event){
-        // remove event from local database
-    })
-    .on('error', console.error);
-
+    
+    
+    
+/*  Event listener 2
+    contractInstance.once('betTaken', {
+        filter: {player: '0xff93D08C89fB0f894C3c24a3bC135fd1D975Eb0b'}, // for test: player and contract owner are the same
+        fromBlock: 7097288
+    }, function(error, event){ console.log(event); });
+*/
+   
+    //Event listener 1
+    var event = contractInstance.generatedRandomNumber({}, {fromBlock:7097288, toBlock: 'latest'})
+   
+    event.watch(function(error, result){
+        if(!error){
+           console.log("Block Number: " + result.blockNumber);
+        }
+    });
+   
 }
 
 
