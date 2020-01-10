@@ -13,8 +13,9 @@ contract FlipContract is Ownable, usingProvable {
         uint value;                                     //betting value (double or loose)
         bool result;                                    //win or loose result
     }
-//* Events */
-    event betTaken(address player, uint value, bool result);
+    //* Events */
+    event betTaken(address indexed player, bytes32 Id, uint value, bool result);
+    event betPlaced(address indexed player,bytes32 queryId, uint value);
     event funded(address contractOwner, uint funding);
     event LogNewProvableQuery(string description);
     event generatedRandomNumber(uint256 randomNumber);
@@ -48,17 +49,17 @@ contract FlipContract is Ownable, usingProvable {
         uint256 randomNumber = uint256(keccak256(abi.encodePacked(_result))) % 2;
 
         if(randomNumber == 0){
-            betting[_queryId].result == false;
+            betting[_queryId].result = false;
         }
         else if(randomNumber == 1){
-            betting[_queryId].result == true;
+            betting[_queryId].result = true;
             betting[_queryId].player.transfer((betting[_queryId].value)*2);
         }
 
         waiting[betting[_queryId].player] = false;
 
-        emit betTaken(betting[_queryId].player, betting[_queryId].value, betting[_queryId].result);
         emit generatedRandomNumber(randomNumber);
+        emit betTaken(betting[_queryId].player, _queryId, betting[_queryId].value, betting[_queryId].result);
        }
     }
     // Function to simulate coin flip 50/50 randomnes
@@ -72,7 +73,8 @@ contract FlipContract is Ownable, usingProvable {
 
         betting[queryId] = Bet({player: msg.sender, value: msg.value, result: false});      //Initialize Bet with values of player
 
-        emit LogNewProvableQuery("Provable query was sent, standing by for answer...");
+        emit betPlaced(msg.sender, queryId, msg.value);
+        //emit LogNewProvableQuery("Provable query was sent, standing by for answer...");
     }
     // Function to Withdraw Funds
     function withdrawAll() public onlyContractOwner returns(uint){
