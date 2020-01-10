@@ -1,0 +1,22 @@
+input[type="text"] {
+  display: block;
+  margin : 0 auto;
+}
+
+.top-heading {
+  font-size: 60px;
+}
+
+.bottom-heading {
+  font-size: 20px;
+}
+
+.form-control {
+  max-width: 115px;
+  text-align: center;
+}
+.container {
+  text-align: center;
+  max-width: 1000px;
+  margin: 0 auto;
+}
